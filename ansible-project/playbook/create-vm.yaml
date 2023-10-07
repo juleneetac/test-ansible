@@ -1,0 +1,35 @@
+---
+- name: Create Virtual Machine from XML
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Define VM using XML file
+      virt:
+        command: define
+        xml: "{{ lookup('template', '../vm.xml') }}"
+
+    - name: Start the VM
+      virt:
+        name: immfly-debian10
+        state: running
+
+- name: Provision authorized_keys
+  hosts: localhost
+  gather_facts: no
+  become: yes
+  become_method: sudo
+
+  tasks:
+    - name: Create .ssh directory
+      file:
+        path: /home/toor/.ssh
+        state: directory
+        mode: '0700'
+        owner: toor
+    - name: Add public key to authorized_keys
+      authorized_key:
+        user: toor  # Replace with the username on the VM
+        key: "{{ lookup('file', '../rsa.pub') }}"  # Replace with the path to your public key file
+        state: present
+
